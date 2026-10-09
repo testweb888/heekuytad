@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Curve with Colorful Stars</title>
+      <p class="site-subtitle">"แฟนสู้ๆๆๆๆๆๆ"</p>
+  <style>
+    * {
+      color: #ff375f;
+      font-size: 30px;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    canvas {
+      display: block;
+      max-width: 100vw;
+      max-height: 85vh;
+    }
+    .btn-container {
+      margin-top: 15px;
+    }
+    button {
+      background: linear-gradient(45deg, #ff2d55, #ff375f, #ff7597);
+      border: none;
+      color: white;
+      padding: 10px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 45, 85, 0.4);
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(255, 45, 85, 0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="heartCanvas"></canvas>
+  <div class="btn-container">
+    <button onclick="startAnimation()">✨ วาดใหม่อีกครั้ง</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('heartCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // รายการสี
+    const colors = [
+      "#ff0033", "#00d4ff", "#00ff66", "#ffff00", 
+      "#00ffff", "#ff00ff", "#ff8800", "#ff66cc", "#ffffff"
+    ];
+
+    let width, height, scale, cx, cy;
+    let currentStep = 0;
+    const totalSteps = 120;
+    let animId = null;
+
+    function resize() {
+      width = Math.min(window.innerWidth, 600);
+      height = Math.min(window.innerHeight * 0.8, 600);
+      canvas.width = width;
+      canvas.height = height;
+      cx = width / 2;
+      cy = height / 2 - 20; // เลื่อนขึ้นนิดหน่อยเพื่อให้หัวใจอยู่กึ่งกลางสวยงาม
+      scale = Math.min(width, height) / 38;
+    }
+
+    // วาดดวงดาวประกาย 8 แฉก
+    function drawStar(x, y, color) {
+      const armLength = 7;
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+
+      for (let i = 0; i < 8; i++) {
+        const rad = (i * 45) * (Math.PI / 180);
+        const ex = x + Math.cos(rad) * armLength;
+        const ey = y + Math.sin(rad) * armLength;
+
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function step() {
+      if (currentStep >= totalSteps) return;
+
+      const angle = currentStep * (Math.PI * 2) / totalSteps;
+
+      // คำนวณพิกัดหัวใจ (สมการเดียวกับใน Python)
+      const hx = 16 * Math.pow(Math.sin(angle), 3) * scale;
+      const hy = (13 * Math.cos(angle)
+                 - 5 * Math.cos(2 * angle)
+                 - 2 * Math.cos(3 * angle)
+                 - Math.cos(4 * angle)) * scale;
+
+      // ใน Canvas แกน Y จะชี้ลงล่าง จึงต้องลบ hy
+      const targetX = cx + hx;
+      const targetY = cy - hy;
+
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      // ลากเส้นจากจุดศูนย์กลาง (cx, cy) ไปยังขอบหัวใจ
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 6;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(targetX, targetY);
+      ctx.stroke();
+      ctx.restore();
+
+      // วาดดวงดาว 8 แฉกที่ปลายเส้น
+      drawStar(targetX, targetY, color);
+
+      currentStep++;
+
+      // หน่วงเวลาเล็กน้อยเพื่อให้ค่อยๆ วาดแบบแอนิเมชัน
+      animId = setTimeout(step, 35);
+    }
+
+    function startAnimation() {
+      if (animId) clearTimeout(animId);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      currentStep = 0;
+      step();
+    }
+
+    window.addEventListener('resize', () => {
+      resize();
+      startAnimation();
+    });
+
+    resize();
+    startAnimation();
+  </script>
+</body>
+</html>
